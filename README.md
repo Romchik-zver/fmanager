@@ -1,10 +1,10 @@
 # fmanager
 
-Однопанельный TUI-файловый менеджер на C11 с ncurses. Умеет ходить по
-каталогам, копировать, перемещать, удалять, искать рекурсивно и разово
-сканировать `/`, чтобы потом показывать размеры папок из кэша.
+Single-panel TUI file manager in C11 with ncurses. Walks directories, copies,
+moves, deletes, searches recursively, and scans `/` once so it can later
+show folder sizes from a cache.
 
-## Скриншот
+## What it looks like
 
 ```
 
@@ -19,123 +19,108 @@ h Help | / Search | r Rename | v View | e Edit | c Copy | m Move | n Newdir | f 
 
 ```
 
-## Зависимости
+## Dependencies
 
-- Linux (или POSIX-совместимая ОС), компилятор C11, заголовки ncurses с
-  широкими символами.
+- Linux (or another POSIX-compatible OS), a C11 compiler, ncurses headers
+  with wide-character support.
 - Debian/Ubuntu: `sudo apt install build-essential libncurses-dev`
 - Fedora: `sudo dnf install gcc make ncurses-devel`
 - Arch: `sudo pacman -S base-devel ncurses`
 
-## Сборка
+## Building
 
 ```sh
 gcc -Wall -Wextra -O2 -std=c11 src/*.c -o fmanager -lncurses
 ./fmanager
 ```
 
-Для сборки AppImage используется `build-appimage.sh`. Он требует `nix`
-(берёт оттуда `libncursesw.so.6`), `patchelf`, `wget` и `mksquashfs`:
+Or:
+
+```
+make clean && make
+```
+
+AppImage is built with `build-appimage.sh`. It needs `nix` (pulls
+`libncursesw.so.6` from there), `patchelf`, `wget`, and `mksquashfs`:
 
 ```
 ./build-appimage.sh
-# на выходе fmanager-x86_64.AppImage
+# produces fmanager-x86_64.AppImage
 ```
 
-## Клавиши
+## Keys
 
-| Клавиша | Что делает |
+| Key ↕▾ | Action ↕▾ |
 |---|---|
-| `↑` / `↓` | Движение по списку |
-| `Home` / `End` | В начало / в конец списка |
-| `Enter` | Войти в каталог или открыть файл на просмотр |
-| `→` | Войти в каталог |
-| `←`, `Backspace` | Выйти на уровень вверх |
-| `Space` | Пометить/снять пометку, курсор вниз |
-| `u` | Снять все пометки |
-| `h` | Справка |
-| `/` | Рекурсивный поиск (подстрока или маска `*.c`, `?`) |
-| `r` | Переименовать |
-| `v` | Просмотреть файл (встроенный просмотрщик) |
-| `e` | Редактировать файл (встроенный редактор) |
-| `c` | Копировать отмеченное (или текущее) в указанный каталог |
-| `m` | Переместить отмеченное (или текущее) в указанный каталог |
-| `n` | Создать каталог |
-| `f` | Создать пустой файл |
-| `d` | Удалить отмеченное (или текущее), с подтверждением |
-| `p` | chmod (восьмеричный ввод, например `755`) |
-| `s` | Запустить сканирование `/` в фоне и наполнить кэш |
-| `S` | Сменить режим сортировки: name → size → time → ext |
-| `:` | Выполнить команду шелла в текущем каталоге панели |
-| `q` | Выход |
+| −`↑` / `↓` | Move through the list |
+| −`Home` / `End` | Jump to the top / bottom of the list |
+| −`Enter` | Enter a directory or open a file for viewing |
+| `→` | Enter a directory |
+| `←`, `Backspace` | Go one level up |
+| `Space` | Mark/unmark an entry, cursor moves down |
+| `u` | Clear all marks |
+| `h` | Help |
+| `/` | Recursive search (substring or mask `*.c`, `?`) |
+| `r` | Rename |
+| `v` | View file (built-in viewer) |
+| `e` | Edit file (built-in editor) |
+| `c` | Copy marked (or current) into a given directory |
+| `m` | Move marked (or current) into a given directory |
+| `n` | Create a directory |
+| `f` | Create an empty file |
+| `d` | Delete marked (or current), with confirmation |
+| `p` | chmod (octal input, e.g. `755`) |
+| `s` | Start a background scan of `/` and fill the cache |
+| `S` | Cycle sort mode: name → size → time → ext |
+| `:` | Run a shell command in the panel's current directory |
+| `q` | Quit |
+⚙
 
-В диалогах: `Tab` — автодополнение пути, `Enter` — подтвердить,
-`Esc` — отмена. При перезаписи в copy/move: `y` — да, `n` — пропустить,
-`a` — для всех, `c` — отмена.
+In dialogs: `Tab` — path autocomplete, `Enter` — confirm, `Esc` — cancel.
+On overwrite during copy/move: `y` — yes, `n` — skip, `a` — all, `c` — cancel.
 
-## Просмотрщик и редактор
+## Viewer and editor
 
-Собственные, без вызова `$PAGER` и `$EDITOR`. Подсветка синтаксиса для
+Hand-rolled, roughly in the spirit of nano or Notepad. Syntax highlighting for
 C/C++/Rust/Go/JS/TS/Java/C# (`.c .h .cpp .cc .hpp .rs .go .js .ts .java .cs`),
-Python (`.py`) и shell (`.sh .bash`).
+Python (`.py`), and shell (`.sh .bash`).
 
-- Просмотр: стрелки, `PgUp`/`PgDn`, `Home`/`End` для навигации, `q` или `Esc` — выход.
-- Редактирование: обычный ввод текста, `Enter` — новая строка, `Backspace` —
-удалить символ, `Esc` — сохранить и выйти. Курсор всегда в конце буфера.
+- View: arrows, `PgUp`/`PgDn`, `Home`/`End` to navigate, `q` or `Esc` to exit.
+- Edit: normal text input, `Enter` — new line, `Backspace` — delete a character,
+`Esc` — save and exit. The cursor always sits at the end of the buffer.
 
-## Конфигурация
+## Configuration
 
-Файл `~/.config/fmanager/fmanager.conf` создаётся при первом запуске.
-Настраиваются цвета папок, симлинков, исполняемых файлов, строки статуса,
-заголовка панели, подсветки клавиш и синтаксиса. Доступные цвета:
+The file `~/.config/fmanager/fmanager.conf` is created on first run. It
+controls colors of folders, symlinks, executables, the status bar, the panel
+header, key hints, and syntax highlighting. Available colors:
 `black red green yellow blue magenta cyan white default`.
 
-Состояние (последний каталог и позиция курсора) и кэш размеров хранятся в
-`~/.cache/fmanager.state` и `~/.cache/fmanager.cache`.
+State (last directory and cursor position) and the size cache live in
+`~/.cache/fmanager.state` and `~/.cache/fmanager.cache`.
 
-## Как это устроено
+## How it works
 
-- Обход каталогов идёт через `lstat`, а не `stat` — симлинки не
-разворачиваются, зацикливания не будет.
-- Размер файла берётся как `st_blocks * 512` (место на диске), с
-фолбэком на `st_size`, если блоков нет.
-- Фоновое сканирование `/` идёт в отдельном потоке (`pthread`), кэш
-заполняется через `cache_put`, поиск — `bsearch` по отсортированному
-массиву.
-- При сканировании и поиске пропускаются `/proc`, `/sys`, `/dev`, `/run`.
-- Копирование — буфер 64 КБ, `read`/`write`. Перемещение сначала пытается
-`rename`; если ядро вернуло `EXDEV`, копирует и удаляет источник.
-- Удаление корня `/` запрещено на уровне `fs_delete`.
+- Directory traversal uses `lstat`, not `stat` — symlinks aren't followed, so
+no loops.
+- File size comes from `st_blocks * 512` (actual disk usage), with a fallback
+to `st_size` when blocks are zero.
+- The background `/` scan runs in a separate thread (`pthread`), fills the
+cache via `cache_put`, and lookups go through `bsearch` over the sorted array.
+- `/proc`, `/sys`, `/dev`, `/run` are skipped during scanning and searching.
+- Copying uses a 64 KB buffer with `read`/`write`. Moving first tries
+`rename`; if the kernel returns `EXDEV`, it copies and deletes the source.
+- Deleting the `/` root is blocked inside `fs_delete`.
 
-## Ограничения
+## Limitations
 
-- Только POSIX/Linux.
-- Нет работы с архивами и по сети, нет переключения между двумя панелями
-(панель одна).
-- Клавиша `s` всегда сканирует `/`, независимо от текущего каталога.
-- Редактор принимает только ASCII с клавиатуры: не-ASCII ввод не поддержан,
-хотя отображение UTF-8 и удаление целого codepoint'а работают.
-- Диалог перезаписи при copy/move появляется, но проверка существования
-назначения сделана через `stat` (идёт по симлинкам).
+- POSIX/Linux only.
+- No archive support and no network support, no dual-panel switching
+(there's a single panel).
+- The `s` key always scans `/`, regardless of the current directory.
+- The editor accepts ASCII keyboard input only: non-ASCII input isn't
+supported, though UTF-8 rendering and deleting a whole codepoint do work.
+- The overwrite dialog during copy/move does appear, but the destination check
+uses `stat` (follows symlinks).
 
-## Структура
-
-```
-fmanager/
-├── build-appimage.sh    — сборка AppImage через nix + mksquashfs
-├── README.md
-└── src/
-    ├── main.c           — точка входа, SIGINT, setlocale
-    ├── ui.c / ui.h      — панель, отрисовка, обработчик клавиш, поиск, копирование
-    ├── fs.c / fs.h      — POSIX-операции над файлами
-    ├── scan.c / scan.h  — рекурсивный обход и фоновое сканирование
-    ├── cache.c / cache.h — массив (путь, размер) + сохранение на диск
-    ├── dialogs.c / .h   — окна ввода, подтверждения, справки
-    ├── theme.c / .h     — чтение конфига и init_pair
-    └── viewer.c / .h    — встроенный просмотрщик/редактор с подсветкой
-```
-
-## Лицензия
-
-Учебный проект, делай что хочешь.
-
+Learning project, do whatever you want.

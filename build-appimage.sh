@@ -1,18 +1,33 @@
-#!/usr/bin/env bash
+#!/bin/sh
 set -e
 
+VERSION="${VERSION:-0.1.0}"
+ARCH="${ARCH:-x86_64}"
+OUT="fmanager-${VERSION}-${ARCH}.AppImage"
+
 RUNTIME_URL="https://github.com/AppImage/type2-runtime/releases/download/continuous/runtime-x86_64"
-NCURSES_LIB=$(nix eval --raw nixpkgs#ncurses.outPath 2>/dev/null)/lib/libncursesw.so.6
-OUT="fmanager-x86_64.AppImage"
+RUNTIME_CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/fmanager/runtime-x86_64"
 
-make clean && make
+NCURSES_LIB=$(nix eval --raw nixpkgs#ncurses.outPath)/lib/libncursesw.so.6
 
-[ -f runtime-x86_64 ] || { wget -q "$RUNTIME_URL" -O runtime-x86_64; chmod +x runtime-x86_64; }
+make clean
+make
 
-rm -rf AppDir fmanager.squashfs
+mkdir -p "$(dirname "$RUNTIME_CACHE")"
+if [ ! -f "$RUNTIME_CACHE" ]; then
+    echo "Downloading AppImage runtime..."
+    wget -q "$RUNTIME_URL" -O "$RUNTIME_CACHE"
+    chmod +x "$RUNTIME_CACHE"
+fi
+
+rm -rf AppDir
 mkdir -p AppDir/usr/bin AppDir/usr/lib
+
 cp fmanager AppDir/usr/bin/
 cp "$NCURSES_LIB" AppDir/usr/lib/
+
+chmod u+w AppDir/usr/bin/fmanager
+chmod u+w AppDir/usr/lib/libncursesw.so.6
 
 patchelf --set-rpath '$ORIGIN/../lib' AppDir/usr/bin/fmanager
 patchelf --set-rpath '$ORIGIN' AppDir/usr/lib/libncursesw.so.6
@@ -39,7 +54,9 @@ chmod +x AppDir/AppRun
 
 nix-shell -p squashfsTools --run "mksquashfs AppDir fmanager.squashfs -root-owned -noappend -comp zstd"
 
-cat runtime-x86_64 fmanager.squashfs > "$OUT"
+cat "$RUNTIME_CACHE" fmanager.squashfs > "$OUT"
 chmod +x "$OUT"
+
+rm -rf AppDir fmanager.squashfs
 
 echo "Готово: $OUT"

@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
-VERSION="0.1.0"
-ARCH="x86_64"
+VERSION="${VERSION:-0.1.0}"
+ARCH="${ARCH:-x86_64}"
 NAME="fmanager-${VERSION}-${ARCH}-linux"
 
 make clean && make

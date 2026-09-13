@@ -122,4 +122,19 @@ Python (`.py`) и shell (`.sh .bash`).
 - Диалог перезаписи при copy/move появляется, но проверка существования
 назначения сделана через `stat` (идёт по симлинкам).
 
+Установка:
+    tar -xjf fmanager-0.1.0-linux-x86_64.tbz
+    cd fmanager-0.1.0-linux-x86_64
+    ./install.sh
+
+Если команда fmanager не находится после установки, добавь в ~/.bashrc:
+    export PATH="$HOME/.local/bin:$PATH"
+
+или
+
+```bash
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
+```
+
 Учебный проект, делай что хочешь.

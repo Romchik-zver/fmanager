@@ -7,6 +7,7 @@
 #include "dialogs.h"
 #include "viewer.h"
 #include "theme.h"
+#include "opener.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -543,7 +544,7 @@ static void draw_help(void)
 {
     static const char *items[] = {
         "help", "search", "rename", "view", "edit",
-        "copy", "move",   "newdir", "file", "delete",
+        "open","copy", "move", "newdir", "file", "delete",
         "scan", "perm", "quit", ":shell"
     };
     int n = (int)(sizeof(items) / sizeof(items[0]));
@@ -611,6 +612,7 @@ static void action_help(void)
         "/     - Search. Plain text = substring, or mask: *.c   ?",
         "r     - Rename selected entry",
         "v     - View file (built-in; q or ESC to exit)",
+        "o     - Open with default application (xdg-open)",
         "e     - Edit file (built-in; ESC saves and exits)",
         "c     - Copy to directory (marked or current)",
         "m     - Move to directory (marked or current)",
@@ -692,6 +694,20 @@ static void action_rename(void)
         message_dialog(msg);
     }
     reload_panel_keep_cursor(&panel);
+}
+
+static void action_open(void)
+{
+    Entry *e = current_entry();
+    if (!e) return;
+    if (e->type == ENTRY_DIR) {enter_dir(&panel, e->name); return;}
+
+    char path[UI_PATH_MAX];
+    full_path(&panel, e->name, path, sizeof(path));
+
+    if (opener_open(path) != 0) {
+        message_dialog("Cannot open: xdg-open not found");
+    }
 }
 
 static void action_view(void)
@@ -1038,6 +1054,7 @@ static void handle_key(int ch)
         case '/':           action_search();  break;
         case 'r': case 'R': action_rename();  break;
         case 'v': case 'V': action_view();    break;
+        case 'o': case 'O': action_open();    break;
         case 'e': case 'E': action_edit();    break;
         case 'c': case 'C': action_copy();    break;
         case 'm': case 'M': action_move();    break;

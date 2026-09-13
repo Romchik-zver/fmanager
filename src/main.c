@@ -3,8 +3,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <string.h>
 #include <locale.h>
 #include <ncurses.h>
+
+#ifndef FMANAGER_VERSION
+#define FMANAGER_VERSION "unknown"
+#endif
 
 #include "ui.h"
 #include "cache.h"
@@ -17,8 +22,12 @@ static void sigint_handler(int sig)
     exit(0);
 }
 
-int main(void)
+int main(int argc, char **argv)
 {
+    if (argc > 1 && strcmp(argv[1], "--version") == 0) {
+        printf("fmanager %s\n", FMANAGER_VERSION);
+        return 0;
+    }
     setlocale(LC_ALL, "");
 
     signal(SIGINT, sigint_handler);

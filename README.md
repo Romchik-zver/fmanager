@@ -123,4 +123,18 @@ supported, though UTF-8 rendering and deleting a whole codepoint do work.
 - The overwrite dialog during copy/move does appear, but the destination check
 uses `stat` (follows symlinks).
 
+Installation:
+tar -xjf fmanager-0.1.0-linux-x86_64.tbz
+cd fmanager-0.1.0-linux-x86_64
+./install.sh
+
+*If the fmanager command is not found after installation, add the following to ~/.bashrc:*
+export PATH="$HOME/.local/bin:$PATH"
+
+or run script: 
+```bash
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
+```
+
 Learning project, do whatever you want.

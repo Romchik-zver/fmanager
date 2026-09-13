@@ -10,3 +10,4 @@ flake.nix
 flake.lock
 result
 TODO.md
+Install.md

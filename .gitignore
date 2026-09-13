@@ -1,0 +1,10 @@
+*.o
+fmanager
+AppDir/
+*.squashfs
+runtime-x86_64
+fmanager-x86_64.AppImage
+flake.nix
+flake.lock
+result
+TODO.md

@@ -27,7 +27,7 @@ typedef struct {
     size_t count;
     int cursor;
     int scroll;
-    unsigned char *marked;    /* параллельный массив: 1 = отмечен */
+    unsigned char *marked;
     WINDOW *win;
 } Panel;
 
@@ -39,12 +39,10 @@ static char cache_file_path[1024] = "";
 static char state_file_path[1024] = "";
 typedef enum { SORT_NAME, SORT_SIZE, SORT_TIME, SORT_EXT, SORT_COUNT } SortMode;
 static SortMode sort_mode = SORT_NAME;
-static const char *sort_mode_name(void);   /* forward declaration */
-
-/* ─────────── результаты рекурсивного поиска ─────────── */
+static const char *sort_mode_name(void);
 
 typedef struct {
-    char **items;   /* полные пути найденных совпадений */
+    char **items;
     int count;
     int cap;
 } FoundList;
@@ -71,7 +69,6 @@ static void found_add(FoundList *fl, const char *path)
     fl->items[fl->count++] = strdup(path);
 }
 
-/* Не заходим в псевдо-ФС, чтобы не зациклиться и не сканировать ядро. */
 static int is_skip_path(const char *path)
 {
     static const char *skip[] = { "/proc", "/sys", "/dev", "/run", NULL };
@@ -83,7 +80,6 @@ static int is_skip_path(const char *path)
     }
     return 0;
 }
-/* ─────────── утилиты ─────────── */
 
 static char type_char(EntryType t)
 {
@@ -123,13 +119,6 @@ static void join_path(const char *dir, const char *name, char *out, size_t outsz
         snprintf(out, outsz, "%s/%s", dir, name);
 }
 
-/*
- * Превращает введённый пользователем путь в абсолютный.
- *   - Начинается с '/' → уже абсолютный.
- *   - Начинается с '~' → разворачивает в $HOME.
- *   - Иначе → склеивает с panel.path.
- * Работает и для путей, которых пока не существует (mkdir/create).
- */
 static void user_path_to_abs(const char *input, char *out, size_t outsz)
 {
     if (!input || !*input) {
@@ -174,8 +163,8 @@ static int match_mask(const char *name, const char *mask)
 {
     if (*mask == '\0') return *name == '\0';
     if (*mask == '*') {
-        while (*mask == '*') mask++;      /* съедаем звёздочки подряд */
-        if (*mask == '\0') return 1;      /* "abc*" — совпадает всегда */
+        while (*mask == '*') mask++;
+        if (*mask == '\0') return 1;
         while (*name) {
             if (match_mask(name, mask)) return 1;
             name++;
@@ -195,8 +184,6 @@ static int has_mask(const char *s)
     return 0;
 }
 
-/* Рекурсивный обход: собирает совпадения в out.
- * depth ограничивает вложенность, max — сколько результатов собрать. */
 static void find_walk(const char *dir, const char *query, int use_mask,
                       FoundList *out, int max, int depth)
 {
@@ -226,7 +213,6 @@ static void find_walk(const char *dir, const char *query, int use_mask,
     closedir(d);
 }
 
-/* Диалог-список найденных путей. Возвращает индекс или -1 при отмене. */
 static int pick_from_list(const char *title, FoundList *fl, const char *base)
 {
     int h = LINES - 4;
@@ -261,7 +247,6 @@ static int pick_from_list(const char *title, FoundList *fl, const char *base)
             if (idx >= fl->count) break;
             const char *full = fl->items[idx];
 
-            /* Обрезаем префикс base для краткости */
             const char *shown = full;
             if (base_len > 0 && strncmp(full, base, base_len) == 0) {
                 const char *p = full + base_len;
@@ -295,8 +280,6 @@ static int pick_from_list(const char *title, FoundList *fl, const char *base)
     return cursor;
 }
 
-/* ─────────── marked-массив ─────────── */
-
 static void marked_alloc(Panel *p)
 {
     free(p->marked);
@@ -317,8 +300,6 @@ static void marked_clear(Panel *p)
 {
     if (p->marked) memset(p->marked, 0, p->count);
 }
-
-/* ─────────── состояние (last_dir, last_cursor) ─────────── */
 
 static int state_load(char *out_path, size_t outsz, int *out_cursor)
 {
@@ -352,8 +333,6 @@ static void state_save(const char *path, int cursor)
     fclose(f);
 }
 
-/* ─────────── работа с панелью ─────────── */
-
 static void free_panel(Panel *p)
 {
     fs_free_entries(p->entries, p->count);
@@ -372,7 +351,7 @@ static int entry_cmp(const void *a, const void *b)
 
     int xd = (x->type == ENTRY_DIR);
     int yd = (y->type == ENTRY_DIR);
-    if (xd != yd) return yd - xd;    /* каталоги всегда сверху */
+    if (xd != yd) return yd - xd;
 
     switch (sort_mode) {
         case SORT_SIZE:
@@ -414,12 +393,6 @@ static void load_panel(Panel *p)
         return;
     }
 
-    /*
-     * Для папок st.st_size = 4096 (размер inode, а не содержимого).
-     * Настоящий вес папки уже подсчитан при сканировании и лежит в кэше.
-     * Подставляем его в Entry.size — тогда и отрисовка, и сортировка
-     * работают с одним и тем же числом.
-     */
     for (size_t i = 0; i < p->count; i++) {
         if (p->entries[i].type == ENTRY_DIR) {
             char full[UI_PATH_MAX];
@@ -468,8 +441,6 @@ static void go_up(Panel *p)
     load_panel(p);
 }
 
-/* ─────────── отрисовка ─────────── */
-
 static Entry *current_entry(void);
 static void draw_panel(Panel *p)
 {
@@ -509,7 +480,6 @@ static void draw_panel(Panel *p)
         int name_w = w - 16;
         if (name_w < 5) name_w = 5;
 
-        /* Префикс: '+ ' для отмеченных, '  ' для остальных */
         char prefix_ch = is_marked ? '+' : ' ';
         mvwprintw(p->win, i + 1, 1, "%c %-*.*s %10s %c",
                   prefix_ch, name_w, name_w, e->name, szbuf, type_char(e->type));
@@ -609,7 +579,6 @@ static void draw_all(void)
     doupdate();
 }
 
-/* ─────────── вспомогательное ─────────── */
 
 static Entry *current_entry(void)
 {
@@ -618,8 +587,6 @@ static Entry *current_entry(void)
     return &panel.entries[panel.cursor];
 }
 
-/* Собирает индексы элементов для операции:
- * если есть отмеченные — возвращает их, иначе одного текущего. */
 static int collect_targets(int *idxs, int max)
 {
     int n = 0;
@@ -633,8 +600,6 @@ static int collect_targets(int *idxs, int max)
     }
     return n;
 }
-
-/* ─────────── действия ─────────── */
 
 static void action_help(void)
 {
@@ -687,9 +652,8 @@ static void action_search(void)
             char dir[UI_PATH_MAX];
             size_t dlen = (size_t)(slash - hit);
             if (dlen == 0) {
-                /* Файл в корне: "/name" → dir="/", name после слэша */
                 snprintf(dir, sizeof(dir), "/");
-                slash++;   /* указывает на имя */
+                slash++;
             } else {
                 if (dlen >= sizeof(dir)) dlen = sizeof(dir) - 1;
                 memcpy(dir, hit, dlen);
@@ -765,10 +729,6 @@ static void action_edit(void)
     refresh();
 }
 
-/*
- * Диалог перезаписи: y = yes, n = no, a = all, c = cancel.
- * Возвращает: 1=yes, 0=no, 2=all, -1=cancel.
- */
 static int overwrite_dialog(const char *name)
 {
     int h = 7;
@@ -826,9 +786,8 @@ static void action_copy(void)
         if (stat(dst, &st) == 0) {
             int ans = overwrite_all ? 2 : overwrite_dialog(e->name);
             if (ans == -1) { cancelled = 1; break; }
-            if (ans ==  0) continue;              /* skip */
+            if (ans ==  0) continue;
             if (ans ==  2) overwrite_all = 1;
-            /* ans == 1 или 2 — удаляем и копируем */
             fs_delete(dst);
         }
 
@@ -966,7 +925,6 @@ static const char *sort_mode_name(void)
 
 static void action_sort(void)
 {
-    /* Запоминаем текущий выделенный элемент, чтобы курсор не «прыгнул». */
     char keep[256] = "";
     if (panel.cursor >= 0 && panel.cursor < (int)panel.count) {
         snprintf(keep, sizeof(keep), "%s", panel.entries[panel.cursor].name);
@@ -990,7 +948,6 @@ static void action_chmod(void)
     Entry *e = current_entry();
     if (!e) return;
 
-    /* Показываем текущий режим: строкой и восьмеричным числом. */
     char modebuf[12];
     fs_format_mode(e->mode, modebuf, sizeof(modebuf));
     char cur_octal[8];
@@ -1003,7 +960,6 @@ static void action_chmod(void)
     char input[32] = "";
     if (prompt_input(title, input, sizeof(input)) != 0) return;
 
-    /* Парсим восьмеричное число. */
     errno = 0;
     char *end = NULL;
     long mode_val = strtol(input, &end, 8);
@@ -1040,18 +996,13 @@ static void action_shell(void)
     char cmd[1024] = "";
     if (prompt_input("Shell command:", cmd, sizeof(cmd)) != 0) return;
 
-    /* endwin / refresh вокруг system() — чтобы терминал не поплыл */
     def_prog_mode();
     endwin();
 
-    /* Меняем рабочий каталог на текущий в панели, чтобы команда
-     * выполнялась «в этой папке». */
     char oldcwd[UI_PATH_MAX];
     int have_old = (getcwd(oldcwd, sizeof(oldcwd)) != NULL);
 
-    if (chdir(panel.path) != 0) {
-        /* Не смогли — оставляем как есть, выполним в исходном */
-    }
+    if (chdir(panel.path) != 0) { }
 
     printf("\n$ %s\n", cmd);
     fflush(stdout);
@@ -1063,13 +1014,11 @@ static void action_shell(void)
     printf("\n[press Enter to return]");
     fflush(stdout);
 
-    /* Съедаем остаток от предыдущего ввода + ждём Enter */
     int c;
     while ((c = getchar()) != '\n' && c != EOF) { }
 
-    /* Возвращаемся в старую папку, чтобы не менять состояние панели */
     if (have_old) {
-        if (chdir(oldcwd) != 0) { /* игнорируем */ }
+        if (chdir(oldcwd) != 0) {  }
     }
 
     reset_prog_mode();
@@ -1077,11 +1026,8 @@ static void action_shell(void)
     touchwin(stdscr);
     refresh();
 
-    /* Перечитываем папку — команда могла что-то создать/удалить/переименовать. */
     reload_panel_keep_cursor(&panel);
 }
-
-/* ─────────── главный обработчик ─────────── */
 
 static void handle_key(int ch)
 {
@@ -1164,8 +1110,6 @@ static void handle_key(int ch)
     }
 }
 
-/* ─────────── публичное API ─────────── */
-
 void ui_init(void)
 {
     initscr();
@@ -1209,8 +1153,6 @@ int ui_run(void)
 
     memset(&panel, 0, sizeof(panel));
 
-    /* Загружаем сохранённое состояние (last_dir + last_cursor).
-     * Если не получилось — берём cwd. */
     int saved_cursor = 0;
     if (!state_load(panel.path, sizeof(panel.path), &saved_cursor)) {
         if (!getcwd(panel.path, sizeof(panel.path))) {

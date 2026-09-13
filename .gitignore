@@ -3,7 +3,9 @@ fmanager
 AppDir/
 *.squashfs
 runtime-x86_64
-fmanager-x86_64.AppImage
+*.tbz
+*.AppImage
+/releases
 flake.nix
 flake.lock
 result

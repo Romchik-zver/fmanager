@@ -84,21 +84,6 @@ int prompt_input(const char *title, char *out, size_t outsz)
     return (strlen(out) > 0) ? 0 : -1;
 }
 
-/*
- * Tab-автодополнение пути.
- * buf — текущий ввод пользователя (изменяется на месте).
- * base_dir — от какой папки считать относительные пути.
- *
- * Логика:
- *   "~/Doc"   → dir="~/",   base="Doc"
- *   "foo/ba"  → dir="foo/", base="ba"
- *   "Doc"     → dir="",     base="Doc"
- *
- * dir резолвится в абсолютный, читается, находятся имена с префиксом base.
- *   0 совпадений — ничего не делаем.
- *   1 совпадение — дополняем до полного имени (+ "/" если это папка).
- *   >1 — дополняем до самого длинного общего префикса.
- */
 static void expand_tab(char *buf, size_t bufsz, const char *base_dir)
 {
     char *last_slash = strrchr(buf, '/');
@@ -116,7 +101,6 @@ static void expand_tab(char *buf, size_t bufsz, const char *base_dir)
         base_part = buf;
     }
 
-    /* Абсолютный путь к папке, которую сканируем */
     char absdir[4096];
     if (dir_part[0] == '\0') {
         snprintf(absdir, sizeof(absdir), "%s", base_dir ? base_dir : ".");
@@ -168,7 +152,6 @@ static void expand_tab(char *buf, size_t bufsz, const char *base_dir)
     if (matches == 0) return;
 
     if (matches == 1) {
-        /* Полное имя + '/' если это директория */
         char fullpath[4096];
         snprintf(fullpath, sizeof(fullpath), "%s/%s", absdir, common);
         struct stat st;
@@ -224,12 +207,10 @@ int prompt_path_input(const char *title, const char *base_dir,
         }
 
         if (c == '\t') {
-            /* Автодополнение */
             out[i] = '\0';
             expand_tab(out, outsz, base_dir);
             i = (int)strlen(out);
 
-            /* Перерисовываем строку ввода */
             int max_cols = w - 5;
             wmove(win, 2, 4);
             for (int k = 0; k < max_cols; k++) waddch(win, ' ');

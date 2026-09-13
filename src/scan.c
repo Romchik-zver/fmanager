@@ -14,11 +14,6 @@
 
 #define SCAN_PATH_MAX 4096
 
-/*
- * Псевдо-файловые системы, которые НЕ надо обходить при сканировании.
- * /proc/kcore репортит размер 128 TB (виртуальная память ядра) —
- * отсюда были гигантские числа вроде 131000 GB.
- */
 static const char *skip_dirs[] = {
     "/proc",
     "/sys",
@@ -81,7 +76,6 @@ long long scan_dir_weight(const char *path, ScanStats *stats)
         if (S_ISREG(st.st_mode)) {
             if (stats) stats->files++;
 
-            /* st_blocks * 512 — реальное место на диске. */
             long long sz = (long long)st.st_blocks * 512;
             if (sz == 0) sz = (long long)st.st_size;
             total += sz;
@@ -95,8 +89,6 @@ long long scan_dir_weight(const char *path, ScanStats *stats)
     return total;
 }
 
-/* ─────────── фоновое сканирование ─────────── */
-
 static pthread_t      scan_thread;
 static atomic_bool    scan_running = false;
 static atomic_bool    scan_has_worker = false;
@@ -108,7 +100,6 @@ static void *scan_worker(void *arg)
 {
     (void)arg;
 
-    /* Начинаем с чистого кэша, иначе после второго скана будут дубликаты. */
     free_cache();
 
     ScanStats local;
@@ -116,7 +107,6 @@ static void *scan_worker(void *arg)
 
     long long bytes = scan_dir_weight(scan_root, &local);
 
-    /* Сортируем кэш — иначе cache_get через bsearch не найдёт ничего. */
     cache_sort();
 
     scan_result_bytes = bytes;

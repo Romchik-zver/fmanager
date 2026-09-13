@@ -1,10 +1,3 @@
-# fmanager — TUI файловый менеджер на ncurses
-#
-# Сборка:      make
-# Запуск:      make run
-# Пересборка:  make rebuild
-# Очистка:     make clean
-
 CC       = gcc
 CFLAGS   = -Wall -Wextra -O2 -std=c11
 LDFLAGS  = -lncursesw -lpthread

@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
-#include <locale.h>      /* ← добавили */
+#include <locale.h>
 #include <ncurses.h>
 
 #include "ui.h"
@@ -19,7 +19,7 @@ static void sigint_handler(int sig)
 
 int main(void)
 {
-    setlocale(LC_ALL, "");   /* ← ВАЖНО: включает поддержку UTF-8 в ncurses */
+    setlocale(LC_ALL, "");
 
     signal(SIGINT, sigint_handler);
 

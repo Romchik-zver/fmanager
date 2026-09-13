@@ -42,7 +42,6 @@ static void build_path(char *buf, size_t bufsz, const char *dir, const char *nam
         snprintf(buf, bufsz, "%s/%s", dir, name);
 }
 
-/* Рисует "-rwxr-xr-x" в buf (минимум 11 байт). */
 void fs_format_mode(mode_t mode, char *buf, size_t bufsz)
 {
     if (bufsz < 11) {
@@ -71,7 +70,6 @@ void fs_format_mode(mode_t mode, char *buf, size_t bufsz)
     buf[9]  = (mode & S_IXOTH) ? 'x' : '-';
     buf[10] = '\0';
 
-    /* SUID / SGID / sticky — как ls -l */
     if (mode & S_ISUID) buf[3] = (mode & S_IXUSR) ? 's' : 'S';
     if (mode & S_ISGID) buf[6] = (mode & S_IXGRP) ? 's' : 'S';
     if (mode & S_ISVTX) buf[9] = (mode & S_IXOTH) ? 't' : 'T';
@@ -111,7 +109,6 @@ int fs_list_dir(const char *path, Entry **out, size_t *count)
         arr[n].name = strdup(de->d_name);
         if (!arr[n].name) break;
 
-        /* Размер и права */
         arr[n].mode = st.st_mode;
         arr[n].mtime = (long long)st.st_mtime;
 
@@ -123,7 +120,6 @@ int fs_list_dir(const char *path, Entry **out, size_t *count)
             arr[n].size = (long long)st.st_size;
         }
 
-        /* Тип */
         if (S_ISDIR(st.st_mode)) {
             arr[n].type = ENTRY_DIR;
         } else if (S_ISLNK(st.st_mode)) {
@@ -137,7 +133,6 @@ int fs_list_dir(const char *path, Entry **out, size_t *count)
             arr[n].type = ENTRY_OTHER;
         }
 
-        /* Цель симлинка (если это симлинк) */
         arr[n].link_target = NULL;
         if (S_ISLNK(st.st_mode)) {
             char target[FS_PATH_MAX];

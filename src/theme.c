@@ -10,11 +10,6 @@
 #include <errno.h>
 #include <ncurses.h>
 
-/*
- * Конфиг: $HOME/.config/fmanager/fmanager.conf
- * Создаётся автоматически при первом запуске.
- */
-
 #define CFG_DIRNAME  ".config/fmanager"
 #define CFG_FILENAME "fmanager.conf"
 
@@ -129,9 +124,9 @@ void theme_init(void)
     int st_fg  = COLOR_BLACK, st_bg  = COLOR_WHITE;
     int hd_fg  = COLOR_BLACK, hd_bg  = COLOR_CYAN;
     int key_fg = COLOR_RED,   key_bg = -1;
-    int syk_fg = COLOR_YELLOW;   /* ключевые слова */
-    int sys_fg = COLOR_GREEN;    /* строки */
-    int syc_fg = COLOR_CYAN;     /* комментарии */
+    int syk_fg = COLOR_YELLOW;
+    int sys_fg = COLOR_GREEN;
+    int syc_fg = COLOR_CYAN;
 
     char cfg_path[1024];
     build_cfg_path(cfg_path, sizeof(cfg_path));

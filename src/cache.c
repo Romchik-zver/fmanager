@@ -68,7 +68,6 @@ int cache_save(const char *filename)
     if (!f) return -1;
 
     for (int i = 0; i < cache.count; i++) {
-        /* Путь может содержать пробелы, но не табы — используем \t как разделитель. */
         fprintf(f, "%s\t%lld\n", cache.data[i].path, cache.data[i].weight);
     }
     fclose(f);
@@ -84,7 +83,6 @@ int cache_load(const char *filename)
 
     char line[8192];
     while (fgets(line, sizeof(line), f)) {
-        /* Разделитель — последний \t в строке */
         char *tab = strrchr(line, '\t');
         if (!tab) continue;
 
@@ -92,7 +90,6 @@ int cache_load(const char *filename)
         char *path = line;
         long long weight = atoll(tab + 1);
 
-        /* Убираем завершающий \n */
         size_t plen = strlen(path);
         if (plen == 0) continue;
 

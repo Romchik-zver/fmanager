@@ -4,10 +4,6 @@
 #include <stddef.h>
 #include <sys/types.h>
 
-/*
- * Файловые операции (POSIX).
- */
-
 typedef enum {
     ENTRY_FILE,
     ENTRY_DIR,
@@ -20,8 +16,8 @@ typedef struct {
     char *name;
     long long size;
     EntryType type;
-    mode_t mode;         /* права доступа (биты st_mode) */
-    char *link_target;   /* цель симлинка или NULL */
+    mode_t mode;
+    char *link_target;
     long long mtime;
 } Entry;
 
@@ -37,8 +33,6 @@ int fs_rename(const char *old_path, const char *new_path);
 
 void normalize_path(char *path);
 
-/* Человекочитаемые права: "-rwxr-xr-x" и т.п.
- * buf должен быть минимум 11 байт. */
 void fs_format_mode(mode_t mode, char *buf, size_t bufsz);
 
 #endif

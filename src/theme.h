@@ -26,9 +26,9 @@ enum {
     TH_STATUS,
     TH_HEADER,
     TH_KEY,
-    TH_SYN_KEY,   /* ключевые слова подсветки синтаксиса */
-    TH_SYN_STR,   /* "строки" */
-    TH_SYN_COM,   /* # комментарии */
+    TH_SYN_KEY,
+    TH_SYN_STR,
+    TH_SYN_COM,
 };
 
 void theme_init(void);

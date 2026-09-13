@@ -14,7 +14,6 @@
 #include <locale.h>
 #include <ncurses.h>
 
-/* ─────────── язык и ключевые слова ─────────── */
 
 typedef enum { LANG_NONE, LANG_C, LANG_PY, LANG_SH } Lang;
 
@@ -72,8 +71,6 @@ static int is_keyword(const char **kws, const char *word, size_t wlen)
     return 0;
 }
 
-/* ─────────── UTF-8 ─────────── */
-
 static size_t utf8_char_len(unsigned char c)
 {
     if (c < 0x80) return 1;
@@ -94,8 +91,6 @@ static int utf8_char_width(const char *s, size_t clen)
     return (w < 0) ? 1 : w;
 }
 
-/* ─────────── подсветка одной строки ─────────── */
-
 static void render_line(int row, const char *line, int len, Lang lang, int max_cols)
 {
     if (row < 0 || max_cols <= 1) return;
@@ -103,7 +98,6 @@ static void render_line(int row, const char *line, int len, Lang lang, int max_c
     int col = 0;
     size_t i = 0;
 
-    /* Python/sh: если первая непустая — '#', вся строка комментарий */
     if (lang == LANG_PY || lang == LANG_SH) {
         size_t j = 0;
         while (j < (size_t)len && (line[j] == ' ' || line[j] == '\t')) j++;
@@ -121,7 +115,6 @@ static void render_line(int row, const char *line, int len, Lang lang, int max_c
     while (i < (size_t)len && col < max_cols) {
         unsigned char c = (unsigned char)line[i];
 
-        /* C: '//' — комментарий до конца строки */
         if (lang == LANG_C && c == '/' && i + 1 < (size_t)len && line[i+1] == '/') {
             attron(COLOR_PAIR(TH_SYN_COM));
             while (i < (size_t)len && col < max_cols)
@@ -130,7 +123,6 @@ static void render_line(int row, const char *line, int len, Lang lang, int max_c
             break;
         }
 
-        /* Строки "..." или '...' */
         if (c == '"' || c == '\'') {
             char quote = (char)c;
             attron(COLOR_PAIR(TH_SYN_STR));
@@ -149,7 +141,6 @@ static void render_line(int row, const char *line, int len, Lang lang, int max_c
             continue;
         }
 
-        /* Слово — может быть ключевым */
         if (isalpha(c) || c == '_') {
             size_t start = i;
             while (i < (size_t)len &&
@@ -168,7 +159,6 @@ static void render_line(int row, const char *line, int len, Lang lang, int max_c
             continue;
         }
 
-        /* Обычный символ, возможно UTF-8 */
         size_t clen = utf8_char_len(c);
         if (i + clen > (size_t)len) clen = 1;
         int cw = utf8_char_width(line + i, clen);
@@ -185,7 +175,6 @@ static void render_line(int row, const char *line, int len, Lang lang, int max_c
     }
 }
 
-/* ─────────── основной API ─────────── */
 
 int viewer_open(const char *path, int editable)
 {
@@ -206,18 +195,15 @@ int viewer_open(const char *path, int editable)
     int scroll_row = 0;
     int editing = 1;
 
-    /* Считаем общее количество строк один раз (можно пересчитывать, если editable). */
     int total_rows = 1;
     for (size_t i = 0; i < len; i++) if (buf[i] == '\n') total_rows++;
 
-    /* Переводим getch в блокирующий режим на время viewer'а */
     timeout(-1);
 
     while (editing) {
         int text_h = LINES - 3;
         if (text_h < 1) text_h = 1;
 
-        /* Пересчёт строк на случай редактирования */
         if (editable) {
             total_rows = 1;
             for (size_t i = 0; i < len; i++) if (buf[i] == '\n') total_rows++;
@@ -249,7 +235,6 @@ int viewer_open(const char *path, int editable)
 
         clear();
 
-        /* Рисуем строки, видимые в окне */
         {
             size_t line_start = 0;
             int cur_row = 0;
@@ -274,7 +259,6 @@ int viewer_open(const char *path, int editable)
             }
         }
 
-        /* Статус-бар */
         attron(A_REVERSE);
         mvhline(LINES - 2, 0, ' ', COLS);
         if (editable)
@@ -298,14 +282,12 @@ int viewer_open(const char *path, int editable)
         }
         refresh();
 
-        /* ─────── Ввод ─────── */
         wint_t wch;
         int rc = get_wch(&wch);
 
         if (rc == ERR) continue;
 
         if (rc == KEY_CODE_YES) {
-            /* Функциональные клавиши */
             int key = (int)wch;
 
             if (key == KEY_BACKSPACE) {
@@ -338,7 +320,6 @@ int viewer_open(const char *path, int editable)
             continue;
         }
 
-        /* Обычный ввод (wch — wide char) */
         if (wch == 27) { editing = 0; break; }
 
         if (!editable) {
@@ -350,7 +331,6 @@ int viewer_open(const char *path, int editable)
             continue;
         }
 
-        /* editable */
         if (wch == '\n' || wch == '\r') {
             if (len + 2 < cap) { buf[len++] = '\n'; buf[len] = '\0'; }
             continue;
@@ -368,7 +348,6 @@ int viewer_open(const char *path, int editable)
             continue;
         }
         if (wch >= 32) {
-            /* Преобразуем wide char в UTF-8 и добавляем в буфер */
             char mbs[MB_LEN_MAX];
             mbstate_t st;
             memset(&st, 0, sizeof(st));
@@ -381,7 +360,6 @@ int viewer_open(const char *path, int editable)
         }
     }
 
-    /* Возвращаем timeout(100), как было в ui.c */
     timeout(100);
 
     if (editable) {
